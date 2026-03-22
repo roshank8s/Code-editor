@@ -21,6 +21,9 @@ class SSHConnectionService : Service() {
     var commandRunner: RemoteCommandRunner? = null
         private set
 
+    // Additional port forwarders for browser tunnels
+    private val additionalForwarders = mutableListOf<PortForwarder>()
+
     inner class LocalBinder : Binder() {
         fun getService(): SSHConnectionService = this@SSHConnectionService
     }
@@ -44,6 +47,26 @@ class SSHConnectionService : Service() {
         val forwarder = PortForwarder(client)
         portForwarder = forwarder
         return forwarder
+    }
+
+    /**
+     * Create an additional PortForwarder for browser tunnels.
+     * Uses the same SSH client as the main connection.
+     */
+    fun createPortForwarder(): PortForwarder? {
+        val client = sshManager?.getClient() ?: return null
+        val forwarder = PortForwarder(client)
+        additionalForwarders.add(forwarder)
+        return forwarder
+    }
+
+    /**
+     * Get count of active tunnels (main + additional).
+     */
+    fun activeTunnelCount(): Int {
+        var count = if (portForwarder?.isActive == true) 1 else 0
+        count += additionalForwarders.count { it.isActive }
+        return count
     }
 
     fun updateNotification(text: String) {
@@ -70,6 +93,10 @@ class SSHConnectionService : Service() {
     }
 
     fun cleanup() {
+        // Close all additional forwarders
+        additionalForwarders.forEach { it.close() }
+        additionalForwarders.clear()
+
         portForwarder?.close()
         sshManager?.close()
         portForwarder = null

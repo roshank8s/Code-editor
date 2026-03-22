@@ -14,4 +14,16 @@
     <color name="status_connected">#4CAF50</color>
     <color name="status_disconnected">#F44336</color>
     <color name="status_connecting">#FF9800</color>
+
+    <color name="fab_primary">#007ACC</color>
+    <color name="fab_secondary">#333333</color>
+    <color name="floating_kb_bg">#E6333333</color>
+    <color name="floating_kb_border">#555555</color>
+    <color name="floating_kb_handle">#666666</color>
+    <color name="modifier_active">#007ACC</color>
+    <color name="modifier_inactive">#88CCCCCC</color>
+    <color name="snippet_bg">#2D2D2D</color>
+    <color name="snippet_category">#007ACC</color>
+    <color name="browser_bg">#1E1E1E</color>
+    <color name="reconnect_banner">#FF9800</color>
 </resources>

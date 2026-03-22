@@ -49,4 +49,48 @@
     <string name="open_editor">Open Editor</string>
     <string name="open_terminal">Open Terminal</string>
     <string name="connection_info">Connection Info</string>
+
+    <!-- Floating Keyboard -->
+    <string name="toggle_keyboard">Toggle Keyboard</string>
+    <string name="keyboard_collapsed">KB</string>
+
+    <!-- FAB Actions -->
+    <string name="fab_browser">Browser</string>
+    <string name="fab_keyboard">Keyboard</string>
+    <string name="fab_fullscreen">Fullscreen</string>
+    <string name="fab_snippets">Snippets</string>
+
+    <!-- Port Browser -->
+    <string name="port_browser">Port Browser</string>
+    <string name="enter_port">Port</string>
+    <string name="go">Go</string>
+    <string name="recent_ports">Recent</string>
+    <string name="browser_back">Back</string>
+    <string name="browser_forward">Forward</string>
+    <string name="browser_refresh">Refresh</string>
+    <string name="close">Close</string>
+
+    <!-- Snippets -->
+    <string name="snippets">Snippets</string>
+    <string name="git_commands">Git</string>
+    <string name="file_operations">Files</string>
+    <string name="dev_tools">Dev</string>
+    <string name="system_commands">System</string>
+    <string name="custom_snippets">Custom</string>
+    <string name="add_snippet">Add Snippet</string>
+
+    <!-- Connection Info -->
+    <string name="host_label">Host</string>
+    <string name="uptime_label">Uptime</string>
+    <string name="active_tunnels">Active Tunnels</string>
+    <string name="latency_label">Latency</string>
+
+    <!-- Reconnect -->
+    <string name="reconnecting">Reconnecting&#8230;</string>
+    <string name="reconnect_failed">Reconnect failed</string>
+    <string name="connection_lost">Connection lost</string>
+
+    <!-- Fullscreen -->
+    <string name="enter_fullscreen">Enter Fullscreen</string>
+    <string name="exit_fullscreen">Exit Fullscreen</string>
 </resources>

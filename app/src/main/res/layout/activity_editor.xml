@@ -1,54 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:background="@color/background_dark">
 
-    <!-- Status bar -->
+    <!-- Main content -->
     <LinearLayout
-        android:id="@+id/statusBar"
         android:layout_width="match_parent"
-        android:layout_height="32dp"
-        android:background="@color/primary_dark"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="12dp"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <View
-            android:id="@+id/statusDot"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
-            android:background="@color/status_connecting" />
+        <!-- Compact Status bar -->
+        <LinearLayout
+            android:id="@+id/statusBar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/status_bar_height"
+            android:background="@color/primary_dark"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp"
+            android:orientation="horizontal">
 
+            <View
+                android:id="@+id/statusDot"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:background="@color/status_connecting" />
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/connecting"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/status_bar_text_size"
+                android:layout_marginStart="6dp"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <ImageButton
+                android:id="@+id/btnToggleKeyboard"
+                android:layout_width="@dimen/status_bar_icon_size"
+                android:layout_height="@dimen/status_bar_icon_size"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_keyboard_24"
+                android:contentDescription="@string/toggle_keyboard"
+                android:scaleType="centerInside"
+                android:layout_marginEnd="4dp" />
+
+            <ImageButton
+                android:id="@+id/btnFullscreen"
+                android:layout_width="@dimen/status_bar_icon_size"
+                android:layout_height="@dimen/status_bar_icon_size"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_fullscreen_24"
+                android:contentDescription="@string/enter_fullscreen"
+                android:scaleType="centerInside"
+                android:layout_marginEnd="4dp" />
+
+            <ImageButton
+                android:id="@+id/btnDisconnect"
+                android:layout_width="@dimen/status_bar_icon_size"
+                android:layout_height="@dimen/status_bar_icon_size"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:contentDescription="@string/disconnect"
+                android:scaleType="centerInside" />
+
+        </LinearLayout>
+
+        <!-- Reconnect banner -->
         <TextView
-            android:id="@+id/statusText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/connecting"
+            android:id="@+id/reconnectBanner"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:background="@color/reconnect_banner"
+            android:gravity="center"
+            android:text="@string/reconnecting"
             android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:layout_marginStart="8dp"
-            android:singleLine="true" />
+            android:textSize="11sp"
+            android:visibility="gone" />
 
-        <ImageButton
-            android:id="@+id/btnDisconnect"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:contentDescription="@string/disconnect"
-            android:scaleType="centerInside" />
+        <!-- WebView for code-server -->
+        <WebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
     </LinearLayout>
-
-    <!-- WebView for code-server -->
-    <WebView
-        android:id="@+id/webView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
 
     <!-- Loading overlay -->
     <FrameLayout
@@ -56,7 +99,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background_dark"
-        android:visibility="visible">
+        android:visibility="visible"
+        android:elevation="10dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -83,95 +127,85 @@
 
     </FrameLayout>
 
-    <!-- Extra keys toolbar -->
-    <HorizontalScrollView
-        android:id="@+id/extraKeysBar"
+    <!-- Floating keyboard container -->
+    <FrameLayout
+        android:id="@+id/floatingKeyboardContainer"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:background="@color/surface_dark"
-        android:scrollbars="none">
+        android:layout_height="match_parent"
+        android:elevation="12dp" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="4dp">
+    <!-- FAB Speed Dial -->
+    <!-- Mini FABs (hidden by default) -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabSnippets"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_marginBottom="200dp"
+        app:srcCompat="@drawable/ic_code_24"
+        app:fabSize="mini"
+        app:backgroundTint="@color/fab_secondary"
+        android:contentDescription="@string/fab_snippets"
+        android:visibility="gone"
+        app:tint="@android:color/white"
+        android:elevation="14dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/keyEsc"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="ESC"
-                android:textSize="11sp"
-                android:minWidth="44dp"
-                style="@style/Widget.Material3.Button.TextButton" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabFullscreen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_marginBottom="152dp"
+        app:srcCompat="@drawable/ic_fullscreen_24"
+        app:fabSize="mini"
+        app:backgroundTint="@color/fab_secondary"
+        android:contentDescription="@string/fab_fullscreen"
+        android:visibility="gone"
+        app:tint="@android:color/white"
+        android:elevation="14dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/keyTab"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="TAB"
-                android:textSize="11sp"
-                android:minWidth="44dp"
-                style="@style/Widget.Material3.Button.TextButton" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabKeyboard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_marginBottom="104dp"
+        app:srcCompat="@drawable/ic_keyboard_24"
+        app:fabSize="mini"
+        app:backgroundTint="@color/fab_secondary"
+        android:contentDescription="@string/fab_keyboard"
+        android:visibility="gone"
+        app:tint="@android:color/white"
+        android:elevation="14dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/keyCtrl"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="CTRL"
-                android:textSize="11sp"
-                android:minWidth="44dp"
-                style="@style/Widget.Material3.Button.TextButton" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabBrowser"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_marginBottom="56dp"
+        app:srcCompat="@drawable/ic_public_24"
+        app:fabSize="mini"
+        app:backgroundTint="@color/fab_secondary"
+        android:contentDescription="@string/fab_browser"
+        android:visibility="gone"
+        app:tint="@android:color/white"
+        android:elevation="14dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/keyAlt"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="ALT"
-                android:textSize="11sp"
-                android:minWidth="44dp"
-                style="@style/Widget.Material3.Button.TextButton" />
+    <!-- Main FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabMain"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:srcCompat="@drawable/ic_add_24"
+        app:backgroundTint="@color/fab_primary"
+        app:tint="@android:color/white"
+        android:elevation="14dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/keyUp"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="\u2191"
-                android:textSize="14sp"
-                android:minWidth="40dp"
-                style="@style/Widget.Material3.Button.TextButton" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/keyDown"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="\u2193"
-                android:textSize="14sp"
-                android:minWidth="40dp"
-                style="@style/Widget.Material3.Button.TextButton" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/keyLeft"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="\u2190"
-                android:textSize="14sp"
-                android:minWidth="40dp"
-                style="@style/Widget.Material3.Button.TextButton" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/keyRight"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:text="\u2192"
-                android:textSize="14sp"
-                android:minWidth="40dp"
-                style="@style/Widget.Material3.Button.TextButton" />
-
-        </LinearLayout>
-
-    </HorizontalScrollView>
-
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
