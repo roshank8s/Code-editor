@@ -82,9 +82,9 @@ class SSHKeyManager(private val context: Context) {
         val keyFile = OpenSSHKeyFile()
         val file = File(privateKeyPath)
         if (passphrase != null) {
-            keyFile.init(file.readText(), null, net.schmizz.sshj.userauth.password.PasswordFinder {
-                passphrase.toCharArray()
-            })
+            keyFile.init(file.readText(), null,
+                net.schmizz.sshj.userauth.password.PasswordUtils.createOneOff(passphrase.toCharArray())
+            )
         } else {
             keyFile.init(file.readText(), null)
         }
