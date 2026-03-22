@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.connection.channel.direct.LocalPortForwarder
-import net.schmizz.sshj.connection.channel.direct.LocalPortForwarder.Parameters
+import net.schmizz.sshj.connection.channel.direct.Parameters
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.net.ServerSocket
