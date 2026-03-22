@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Code Editor</string>
+
+    <!-- Main -->
+    <string name="no_connections">No saved connections.\nTap + to add a server.</string>
+    <string name="add_connection">Add Connection</string>
+
+    <!-- Connection Edit -->
+    <string name="edit_connection">Edit Connection</string>
+    <string name="connection_name">Connection Name</string>
+    <string name="hostname">Hostname / IP</string>
+    <string name="port">Port</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="auth_method">Authentication Method</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_key">SSH Key</string>
+    <string name="private_key_path">Private Key</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="select_key_file">Select Key File</string>
+    <string name="generate_key">Generate SSH Key</string>
+
+    <!-- Editor -->
+    <string name="connecting">Connecting...</string>
+    <string name="setting_up_code_server">Setting up code-server...</string>
+    <string name="loading_editor">Loading editor...</string>
+    <string name="connection_failed">Connection failed</string>
+    <string name="retry">Retry</string>
+    <string name="disconnect">Disconnect</string>
+
+    <!-- Terminal -->
+    <string name="terminal">Terminal</string>
+    <string name="new_session">New Session</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="font_size">Font Size</string>
+    <string name="theme">Theme</string>
+    <string name="dark_theme">Dark</string>
+    <string name="light_theme">Light</string>
+    <string name="keep_alive_interval">Keep-Alive Interval (seconds)</string>
+    <string name="auto_reconnect">Auto-Reconnect</string>
+    <string name="code_server_port">Code-Server Port</string>
+
+    <!-- Actions -->
+    <string name="open_editor">Open Editor</string>
+    <string name="open_terminal">Open Terminal</string>
+    <string name="connection_info">Connection Info</string>
+</resources>

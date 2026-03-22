@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Status bar -->
+    <LinearLayout
+        android:id="@+id/statusBar"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:background="@color/primary_dark"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/statusDot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@color/status_connecting" />
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/connecting"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:layout_marginStart="8dp"
+            android:singleLine="true" />
+
+        <ImageButton
+            android:id="@+id/btnDisconnect"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="@string/disconnect"
+            android:scaleType="centerInside" />
+
+    </LinearLayout>
+
+    <!-- WebView for code-server -->
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Loading overlay -->
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background_dark"
+        android:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ProgressBar
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                style="?android:attr/progressBarStyle" />
+
+            <TextView
+                android:id="@+id/loadingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/connecting"
+                android:textColor="@color/on_surface_dark"
+                android:textSize="14sp"
+                android:layout_marginTop="16dp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- Extra keys toolbar -->
+    <HorizontalScrollView
+        android:id="@+id/extraKeysBar"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@color/surface_dark"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="4dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyEsc"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="ESC"
+                android:textSize="11sp"
+                android:minWidth="44dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyTab"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="TAB"
+                android:textSize="11sp"
+                android:minWidth="44dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyCtrl"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="CTRL"
+                android:textSize="11sp"
+                android:minWidth="44dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyAlt"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="ALT"
+                android:textSize="11sp"
+                android:minWidth="44dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyUp"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="\u2191"
+                android:textSize="14sp"
+                android:minWidth="40dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyDown"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="\u2193"
+                android:textSize="14sp"
+                android:minWidth="40dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="\u2190"
+                android:textSize="14sp"
+                android:minWidth="40dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyRight"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="\u2192"
+                android:textSize="14sp"
+                android:minWidth="40dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+</LinearLayout>
