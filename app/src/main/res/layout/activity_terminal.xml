@@ -160,7 +160,7 @@
                 android:textColor="@color/terminal_fg"
                 android:backgroundTint="@color/terminal_fg"
                 android:hint="$"
-                android:hintTextColor="#666666"
+                app:hintTextColor="#666666"
                 android:inputType="text"
                 android:imeOptions="actionSend"
                 android:singleLine="true" />
