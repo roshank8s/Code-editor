@@ -7,11 +7,22 @@ import net.schmizz.sshj.common.IOUtils
 import net.schmizz.sshj.connection.channel.direct.Session
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.Closeable
 import java.io.IOException
+import java.security.Security
 import java.util.concurrent.TimeUnit
 
 class SSHManager : Closeable {
+
+    companion object {
+        init {
+            // Android ships a stripped BouncyCastle that lacks X25519.
+            // Remove it and insert the full provider so SSHJ can find all algorithms.
+            Security.removeProvider("BC")
+            Security.insertProviderAt(BouncyCastleProvider(), 1)
+        }
+    }
 
     private var client: SSHClient? = null
     private var _isConnected = false

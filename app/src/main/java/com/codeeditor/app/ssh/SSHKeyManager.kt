@@ -16,9 +16,9 @@ import java.security.Security
 class SSHKeyManager(private val context: Context) {
 
     init {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(BouncyCastleProvider())
-        }
+        // Ensure the full BouncyCastle replaces Android's stripped version
+        Security.removeProvider("BC")
+        Security.insertProviderAt(BouncyCastleProvider(), 1)
     }
 
     private val keyDir: File
