@@ -1,8 +1,8 @@
 package com.codeeditor.app.ssh
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,7 +26,7 @@ class PortForwarder(private val sshClient: SSHClient) : Closeable {
         remoteHost: String = "127.0.0.1",
         remotePort: Int,
         localPort: Int = 0
-    ): Int = coroutineScope {
+    ): Int {
         withContext(Dispatchers.IO) {
             stopForwarding()
 
@@ -46,7 +46,7 @@ class PortForwarder(private val sshClient: SSHClient) : Closeable {
             forwarder = sshClient.newLocalPortForwarder(params, ss)
         }
 
-        forwardJob = launch(Dispatchers.IO) {
+        forwardJob = CoroutineScope(Dispatchers.IO).launch {
             try {
                 forwarder?.listen()
             } catch (e: Exception) {
@@ -56,7 +56,7 @@ class PortForwarder(private val sshClient: SSHClient) : Closeable {
             }
         }
 
-        _localPort
+        return _localPort
     }
 
     fun stopForwarding() {
