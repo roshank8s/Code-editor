@@ -7,6 +7,10 @@ class CodeServerSetup(private val commandRunner: RemoteCommandRunner) {
 
     var onStatusUpdate: ((String) -> Unit)? = null
 
+    companion object {
+        private val FALLBACK_PORTS = listOf(8080, 8443, 9090, 9443, 3000)
+    }
+
     suspend fun setupAndStart(port: Int = 8080): SetupResult {
         onStatusUpdate?.invoke("Checking for code-server...")
 
@@ -24,13 +28,19 @@ class CodeServerSetup(private val commandRunner: RemoteCommandRunner) {
             }
         }
 
-        // Kill any existing code-server processes
+        // Kill any existing code-server processes we started
         onStatusUpdate?.invoke("Starting code-server...")
         commandRunner.run("pkill -f 'code-server.*--bind-addr' 2>/dev/null || true", 5)
 
+        // Check if the requested port is already occupied by another service
+        val actualPort = findAvailablePort(port)
+        if (actualPort != port) {
+            onStatusUpdate?.invoke("Port $port in use, using port $actualPort...")
+        }
+
         // Start code-server in background
         val startResult = commandRunner.runInBackground(
-            "code-server --bind-addr 127.0.0.1:$port --auth none --disable-telemetry"
+            "code-server --bind-addr 127.0.0.1:$actualPort --auth none --disable-telemetry"
         )
 
         if (!startResult.isSuccess) {
@@ -39,16 +49,12 @@ class CodeServerSetup(private val commandRunner: RemoteCommandRunner) {
 
         val pid = startResult.stdout.trim()
 
-        // Wait for code-server to be ready
+        // Wait for code-server to be ready by checking for its specific response
         onStatusUpdate?.invoke("Waiting for code-server to start...")
         var attempts = 0
         while (attempts < 30) {
-            val checkReady = commandRunner.run(
-                "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$port/ 2>/dev/null || echo 'FAIL'",
-                5
-            )
-            if (checkReady.stdout.trim().startsWith("200") || checkReady.stdout.trim().startsWith("302")) {
-                return SetupResult.Success(port, pid)
+            if (isCodeServerOnPort(actualPort)) {
+                return SetupResult.Success(actualPort, pid)
             }
             kotlinx.coroutines.delay(1000)
             attempts++
@@ -57,16 +63,51 @@ class CodeServerSetup(private val commandRunner: RemoteCommandRunner) {
         return SetupResult.Error("code-server did not start within 30 seconds")
     }
 
+    /**
+     * Find an available port, checking if something else is already listening.
+     */
+    private suspend fun findAvailablePort(preferredPort: Int): Int {
+        // Build candidate list with preferred port first
+        val candidates = (listOf(preferredPort) + FALLBACK_PORTS).distinct()
+
+        for (candidate in candidates) {
+            val check = commandRunner.run(
+                "ss -tlnp 2>/dev/null | grep -q ':$candidate ' && echo 'IN_USE' || echo 'FREE'",
+                5
+            )
+            if (check.stdout.trim() == "FREE") {
+                return candidate
+            }
+        }
+
+        // All candidates taken — let the OS pick a free port
+        val randomPort = commandRunner.run(
+            "python3 -c \"import socket; s=socket.socket(); s.bind(('',0)); print(s.getsockname()[1]); s.close()\" 2>/dev/null || shuf -i 10000-60000 -n 1",
+            5
+        )
+        return randomPort.stdout.trim().toIntOrNull() ?: preferredPort
+    }
+
+    /**
+     * Verify that code-server is actually responding on the given port
+     * by checking for its characteristic response headers/body.
+     */
+    private suspend fun isCodeServerOnPort(port: Int): Boolean {
+        val result = commandRunner.run(
+            "curl -s -i http://127.0.0.1:$port/ 2>/dev/null | head -20",
+            5
+        )
+        val response = result.stdout
+        // code-server responses contain these identifiers
+        return response.contains("code-server") || response.contains("vscode")
+    }
+
     suspend fun stopCodeServer() {
         commandRunner.run("pkill -f 'code-server.*--bind-addr' 2>/dev/null || true", 5)
     }
 
     suspend fun isCodeServerRunning(port: Int = 8080): Boolean {
-        val result = commandRunner.run(
-            "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$port/ 2>/dev/null",
-            5
-        )
-        return result.stdout.trim().startsWith("200") || result.stdout.trim().startsWith("302")
+        return isCodeServerOnPort(port)
     }
 
     sealed class SetupResult {
