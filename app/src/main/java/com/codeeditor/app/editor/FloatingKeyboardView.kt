@@ -271,7 +271,7 @@ class FloatingKeyboardView(
         visibility = View.GONE
     }
 
-    fun isShown(): Boolean = visibility == View.VISIBLE
+    val isKeyboardVisible: Boolean get() = visibility == View.VISIBLE
 
     private fun saveState() {
         prefs.edit().apply {

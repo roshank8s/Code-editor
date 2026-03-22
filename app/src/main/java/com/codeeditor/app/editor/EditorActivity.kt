@@ -234,13 +234,13 @@ class EditorActivity : AppCompatActivity() {
 
     private fun toggleFloatingKeyboard() {
         val kb = floatingKeyboard ?: return
-        if (kb.isShown()) {
+        if (kb.isKeyboardVisible) {
             kb.hide()
         } else {
             kb.show()
         }
         getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
-            .edit().putBoolean(Constants.PREF_KB_VISIBLE, kb.isShown()).apply()
+            .edit().putBoolean(Constants.PREF_KB_VISIBLE, kb.isKeyboardVisible).apply()
     }
 
     private fun handleKeyAction(action: FloatingKeyboardView.KeyAction) {
