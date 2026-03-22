@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.connection.channel.direct.LocalPortForwarder
-import net.schmizz.sshj.connection.channel.direct.Parameters
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -37,7 +36,7 @@ class PortForwarder(private val sshClient: SSHClient) : Closeable {
             _localPort = ss.localPort
             serverSocket = ss
 
-            val params = LocalPortForwarder.Parameters(
+            val params = net.schmizz.sshj.connection.channel.direct.Parameters(
                 "127.0.0.1",
                 _localPort,
                 remoteHost,
