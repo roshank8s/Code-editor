@@ -306,6 +306,14 @@ class EditorActivity : AppCompatActivity() {
                 sendNativeKey(keyCode)
                 resetModifiers()
             }
+            is FloatingKeyboardView.KeyAction.Backspace -> {
+                sendJSKey(8) // Backspace
+                resetModifiers()
+            }
+            is FloatingKeyboardView.KeyAction.Enter -> {
+                sendJSKey(13) // Enter
+                resetModifiers()
+            }
         }
     }
 
@@ -327,16 +335,9 @@ class EditorActivity : AppCompatActivity() {
         val escaped = char.replace("\\", "\\\\").replace("'", "\\'")
         val js = """
             (function() {
-                var e = new KeyboardEvent('keydown', {
-                    key: '$escaped', ctrlKey: $ctrlPressed, altKey: $altPressed, shiftKey: $shiftPressed,
-                    bubbles: true, cancelable: true
-                });
-                document.activeElement.dispatchEvent(e);
-                var e2 = new KeyboardEvent('keypress', {
-                    key: '$escaped', ctrlKey: $ctrlPressed, altKey: $altPressed, shiftKey: $shiftPressed,
-                    bubbles: true, cancelable: true
-                });
-                document.activeElement.dispatchEvent(e2);
+                var el = document.activeElement;
+                if (el) el.focus();
+                document.execCommand('insertText', false, '$escaped');
             })();
         """.trimIndent()
         binding.webView.evaluateJavascript(js, null)
@@ -766,7 +767,9 @@ class EditorActivity : AppCompatActivity() {
 
     @Deprecated("Use OnBackPressedCallback")
     override fun onBackPressed() {
-        if (binding.webView.canGoBack()) {
+        if (isFullscreen) {
+            toggleFullscreen()
+        } else if (binding.webView.canGoBack()) {
             binding.webView.goBack()
         } else {
             super.onBackPressed()

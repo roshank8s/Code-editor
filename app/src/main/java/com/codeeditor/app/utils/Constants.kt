@@ -29,6 +29,7 @@ object Constants {
     const val PREF_KB_HEIGHT = "kb_height"
     const val PREF_KB_OPACITY = "kb_opacity"
     const val PREF_KB_COLLAPSED = "kb_collapsed"
+    const val PREF_KB_SCALE = "kb_scale"
 
     // Browser prefs
     const val PREF_RECENT_PORTS = "recent_ports"
