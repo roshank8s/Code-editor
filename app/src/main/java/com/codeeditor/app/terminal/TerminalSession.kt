@@ -73,10 +73,22 @@ class TerminalSession(
         interactiveSession?.sendCommand(command)
     }
 
+    /** Send raw text directly to the terminal without appending newline */
+    fun sendText(text: String) {
+        interactiveSession?.sendSpecialKey(text)
+    }
+
     fun sendSpecialKey(key: SpecialKey) {
         val sequence = when (key) {
             SpecialKey.ESC -> "\u001B"
             SpecialKey.TAB -> "\t"
+            SpecialKey.BACKSPACE -> "\u007F"
+            SpecialKey.ENTER -> "\r"
+            SpecialKey.DELETE -> "\u001B[3~"
+            SpecialKey.HOME -> "\u001B[H"
+            SpecialKey.END -> "\u001B[F"
+            SpecialKey.PAGE_UP -> "\u001B[5~"
+            SpecialKey.PAGE_DOWN -> "\u001B[6~"
             SpecialKey.CTRL_C -> "\u0003"
             SpecialKey.CTRL_D -> "\u0004"
             SpecialKey.CTRL_Z -> "\u001A"
@@ -103,7 +115,9 @@ class TerminalSession(
     }
 
     enum class SpecialKey {
-        ESC, TAB, CTRL_C, CTRL_D, CTRL_Z, CTRL_L,
+        ESC, TAB, BACKSPACE, ENTER, DELETE,
+        HOME, END, PAGE_UP, PAGE_DOWN,
+        CTRL_C, CTRL_D, CTRL_Z, CTRL_L,
         ARROW_UP, ARROW_DOWN, ARROW_RIGHT, ARROW_LEFT
     }
 }

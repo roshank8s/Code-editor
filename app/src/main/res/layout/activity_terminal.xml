@@ -1,181 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/terminal_bg">
 
-    <!-- Toolbar -->
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/surface_dark"
-        app:title="@string/terminal"
-        app:titleTextColor="@color/terminal_fg"
-        app:navigationIcon="@android:drawable/ic_menu_close_clear_cancel" />
-
-    <!-- Terminal output -->
-    <ScrollView
-        android:id="@+id/terminalScrollView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
-
-        <TextView
-            android:id="@+id/terminalOutput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="13sp"
-            android:textColor="@color/terminal_fg"
-            android:padding="8dp"
-            android:gravity="bottom"
-            android:textIsSelectable="true" />
-
-    </ScrollView>
-
-    <!-- Input area -->
+    <!-- Main content -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/surface_dark">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <!-- Extra keys -->
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:scrollbars="none">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="4dp">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keyEsc"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="ESC"
-                    android:textSize="10sp"
-                    android:minWidth="40dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keyTab"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="TAB"
-                    android:textSize="10sp"
-                    android:minWidth="40dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keyCtrl"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="CTRL"
-                    android:textSize="10sp"
-                    android:minWidth="40dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keyAlt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="ALT"
-                    android:textSize="10sp"
-                    android:minWidth="40dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keyPipe"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="|"
-                    android:textSize="12sp"
-                    android:minWidth="36dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keySlash"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="/"
-                    android:textSize="12sp"
-                    android:minWidth="36dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keyDash"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="-"
-                    android:textSize="12sp"
-                    android:minWidth="36dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keyUp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="\u2191"
-                    android:textSize="13sp"
-                    android:minWidth="36dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/keyDown"
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp"
-                    android:text="\u2193"
-                    android:textSize="13sp"
-                    android:minWidth="36dp"
-                    style="@style/Widget.Material3.Button.TextButton" />
-
-            </LinearLayout>
-
-        </HorizontalScrollView>
-
-        <!-- Command input -->
+        <!-- Toolbar -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/surface_dark"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="4dp">
-
-            <EditText
-                android:id="@+id/terminalInput"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:fontFamily="monospace"
-                android:textSize="13sp"
-                android:textColor="@color/terminal_fg"
-                android:backgroundTint="@color/terminal_fg"
-                android:hint="$"
-                app:hintTextColor="#666666"
-                android:inputType="text"
-                android:imeOptions="actionSend"
-                android:singleLine="true" />
+            android:paddingHorizontal="4dp">
 
             <ImageButton
-                android:id="@+id/btnSend"
+                android:id="@+id/btnClose"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_send"
-                android:contentDescription="Send"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:contentDescription="Close"
+                android:scaleType="centerInside" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingHorizontal="8dp">
+
+                <TextView
+                    android:id="@+id/toolbarTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/terminal"
+                    android:textColor="@color/terminal_fg"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/toolbarSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#999999"
+                    android:textSize="12sp"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/btnToggleKeyboard"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_keyboard_24"
+                android:contentDescription="@string/toggle_keyboard"
                 android:scaleType="centerInside" />
 
         </LinearLayout>
 
+        <!-- Terminal output -->
+        <ScrollView
+            android:id="@+id/terminalScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/terminalOutput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="13sp"
+                android:textColor="@color/terminal_fg"
+                android:padding="8dp"
+                android:gravity="bottom"
+                android:textIsSelectable="true" />
+
+        </ScrollView>
+
+        <!-- Minimal input capture for system keyboard -->
+        <EditText
+            android:id="@+id/terminalInput"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="#FF1A1A1A"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textColor="@color/terminal_fg"
+            android:hint="Tap to type..."
+            android:hintTextColor="#444444"
+            android:paddingHorizontal="8dp"
+            android:inputType="textNoSuggestions|textVisiblePassword"
+            android:imeOptions="flagNoExtractUi|flagNoFullscreen"
+            android:singleLine="true" />
+
     </LinearLayout>
 
-</LinearLayout>
+    <!-- Floating keyboard container -->
+    <FrameLayout
+        android:id="@+id/floatingKeyboardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="12dp" />
+
+</FrameLayout>

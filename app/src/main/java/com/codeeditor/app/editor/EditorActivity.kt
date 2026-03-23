@@ -335,9 +335,15 @@ class EditorActivity : AppCompatActivity() {
         val escaped = char.replace("\\", "\\\\").replace("'", "\\'")
         val js = """
             (function() {
-                var el = document.activeElement;
-                if (el) el.focus();
-                document.execCommand('insertText', false, '$escaped');
+                var term = document.querySelector('.xterm-helper-textarea');
+                if (term) {
+                    term.focus();
+                    document.execCommand('insertText', false, '$escaped');
+                } else {
+                    var el = document.activeElement;
+                    if (el) el.focus();
+                    document.execCommand('insertText', false, '$escaped');
+                }
             })();
         """.trimIndent()
         binding.webView.evaluateJavascript(js, null)

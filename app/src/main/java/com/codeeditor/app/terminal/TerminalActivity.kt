@@ -1,15 +1,21 @@
 package com.codeeditor.app.terminal
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.text.method.ScrollingMovementMethod
-import android.view.inputmethod.EditorInfo
+import android.view.KeyEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.codeeditor.app.R
 import com.codeeditor.app.connections.ConnectionDatabase
 import com.codeeditor.app.connections.ConnectionEntity
 import com.codeeditor.app.databinding.ActivityTerminalBinding
+import com.codeeditor.app.editor.FloatingKeyboardView
 import com.codeeditor.app.ssh.RemoteCommandRunner
 import com.codeeditor.app.ssh.SSHKeyManager
 import com.codeeditor.app.ssh.SSHManager
@@ -24,7 +30,9 @@ class TerminalActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTerminalBinding
     private var sshManager: SSHManager? = null
     private var terminalSession: TerminalSession? = null
-    private var ctrlMode = false
+    private var floatingKeyboard: FloatingKeyboardView? = null
+    private var ctrlActive = false
+    private var altActive = false
     private val outputBuffer = StringBuilder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,65 +47,194 @@ class TerminalActivity : AppCompatActivity() {
         }
 
         setupUI()
+        setupFloatingKeyboard()
         connectAndStartSession(connectionId)
     }
 
     private fun setupUI() {
-        binding.toolbar.setNavigationOnClickListener { finish() }
+        binding.btnClose.setOnClickListener { finish() }
         binding.terminalOutput.movementMethod = ScrollingMovementMethod()
 
-        // Command input
-        binding.terminalInput.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEND) {
-                sendCurrentInput()
-                true
+        // Tap terminal output to show system keyboard
+        binding.terminalOutput.setOnClickListener {
+            binding.terminalInput.requestFocus()
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.terminalInput, InputMethodManager.SHOW_IMPLICIT)
+        }
+
+        // Toggle floating keyboard
+        binding.btnToggleKeyboard.setOnClickListener {
+            floatingKeyboard?.let {
+                if (it.isKeyboardVisible) it.hide() else it.show()
+            }
+        }
+
+        // Direct input: each character typed is sent immediately to the terminal
+        setupDirectInput()
+    }
+
+    private fun setupDirectInput() {
+        var ignoreChange = false
+
+        binding.terminalInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (ignoreChange) return
+                if (count > 0 && s != null) {
+                    val newText = s.substring(start, start + count)
+                    if (ctrlActive && newText.length == 1) {
+                        terminalSession?.sendCtrlKey(newText[0])
+                        ctrlActive = false
+                        floatingKeyboard?.updateModifierState(
+                            FloatingKeyboardView.KeyAction.Modifier.CTRL, false
+                        )
+                    } else {
+                        terminalSession?.sendText(newText)
+                    }
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                if (ignoreChange || s.isNullOrEmpty()) return
+                ignoreChange = true
+                s.clear()
+                ignoreChange = false
+            }
+        })
+
+        // Handle backspace and enter from system keyboard
+        binding.terminalInput.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DEL -> {
+                        terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.BACKSPACE)
+                        true
+                    }
+                    KeyEvent.KEYCODE_ENTER -> {
+                        terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ENTER)
+                        true
+                    }
+                    else -> false
+                }
             } else false
         }
-
-        binding.btnSend.setOnClickListener { sendCurrentInput() }
-
-        // Extra keys
-        binding.keyEsc.setOnClickListener {
-            terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ESC)
-        }
-        binding.keyTab.setOnClickListener {
-            terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.TAB)
-        }
-        binding.keyCtrl.setOnClickListener {
-            ctrlMode = !ctrlMode
-            binding.keyCtrl.alpha = if (ctrlMode) 1.0f else 0.5f
-        }
-        binding.keyAlt.setOnClickListener {
-            // Alt key handled via escape sequence prefix
-        }
-        binding.keyPipe.setOnClickListener { appendToInput("|") }
-        binding.keySlash.setOnClickListener { appendToInput("/") }
-        binding.keyDash.setOnClickListener { appendToInput("-") }
-        binding.keyUp.setOnClickListener {
-            terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ARROW_UP)
-        }
-        binding.keyDown.setOnClickListener {
-            terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ARROW_DOWN)
-        }
-
-        binding.keyCtrl.alpha = 0.5f
     }
 
-    private fun sendCurrentInput() {
-        val command = binding.terminalInput.text.toString()
-        binding.terminalInput.text?.clear()
+    private fun setupFloatingKeyboard() {
+        val container = binding.floatingKeyboardContainer
+        val keyboard = FloatingKeyboardView(this, container).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+        floatingKeyboard = keyboard
+        container.addView(keyboard)
 
-        if (ctrlMode && command.length == 1) {
-            terminalSession?.sendCtrlKey(command[0])
-            ctrlMode = false
-            binding.keyCtrl.alpha = 0.5f
-        } else {
-            terminalSession?.sendCommand(command)
+        keyboard.onKeyPressed = { action -> handleKeyAction(action) }
+
+        // Show keyboard by default
+        keyboard.show()
+    }
+
+    private fun handleKeyAction(action: FloatingKeyboardView.KeyAction) {
+        when (action) {
+            is FloatingKeyboardView.KeyAction.ModifierToggle -> {
+                when (action.modifier) {
+                    FloatingKeyboardView.KeyAction.Modifier.CTRL -> {
+                        ctrlActive = !ctrlActive
+                        floatingKeyboard?.updateModifierState(action.modifier, ctrlActive)
+                    }
+                    FloatingKeyboardView.KeyAction.Modifier.ALT -> {
+                        altActive = !altActive
+                        floatingKeyboard?.updateModifierState(action.modifier, altActive)
+                    }
+                    FloatingKeyboardView.KeyAction.Modifier.SHIFT -> {
+                        // Shift is handled internally by the keyboard for letter case
+                    }
+                }
+            }
+            is FloatingKeyboardView.KeyAction.SpecialKey -> {
+                when (action.key) {
+                    FloatingKeyboardView.KeyAction.Special.ESC ->
+                        terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ESC)
+                    FloatingKeyboardView.KeyAction.Special.TAB ->
+                        terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.TAB)
+                }
+                resetModifiers()
+            }
+            is FloatingKeyboardView.KeyAction.Character -> {
+                val char = action.char
+                if (ctrlActive && char.length == 1) {
+                    terminalSession?.sendCtrlKey(char[0])
+                } else {
+                    terminalSession?.sendText(char)
+                }
+                resetModifiers()
+            }
+            is FloatingKeyboardView.KeyAction.Backspace -> {
+                terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.BACKSPACE)
+                resetModifiers()
+            }
+            is FloatingKeyboardView.KeyAction.Enter -> {
+                terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ENTER)
+                resetModifiers()
+            }
+            is FloatingKeyboardView.KeyAction.ShortcutKey -> {
+                when (action.shortcut) {
+                    FloatingKeyboardView.KeyAction.Shortcut.SAVE ->
+                        terminalSession?.sendCtrlKey('S')
+                    FloatingKeyboardView.KeyAction.Shortcut.UNDO ->
+                        terminalSession?.sendCtrlKey('Z')
+                    FloatingKeyboardView.KeyAction.Shortcut.REDO ->
+                        terminalSession?.sendCtrlKey('Y')
+                    FloatingKeyboardView.KeyAction.Shortcut.COMMAND_PALETTE -> {}
+                    FloatingKeyboardView.KeyAction.Shortcut.FIND ->
+                        terminalSession?.sendCtrlKey('F')
+                    FloatingKeyboardView.KeyAction.Shortcut.CLOSE_TAB ->
+                        terminalSession?.sendCtrlKey('C')
+                }
+            }
+            is FloatingKeyboardView.KeyAction.NavigationKey -> {
+                val specialKey = when (action.nav) {
+                    FloatingKeyboardView.KeyAction.Navigation.HOME ->
+                        TerminalSession.SpecialKey.HOME
+                    FloatingKeyboardView.KeyAction.Navigation.END ->
+                        TerminalSession.SpecialKey.END
+                    FloatingKeyboardView.KeyAction.Navigation.PAGE_UP ->
+                        TerminalSession.SpecialKey.PAGE_UP
+                    FloatingKeyboardView.KeyAction.Navigation.PAGE_DOWN ->
+                        TerminalSession.SpecialKey.PAGE_DOWN
+                    FloatingKeyboardView.KeyAction.Navigation.LEFT ->
+                        TerminalSession.SpecialKey.ARROW_LEFT
+                    FloatingKeyboardView.KeyAction.Navigation.RIGHT ->
+                        TerminalSession.SpecialKey.ARROW_RIGHT
+                    FloatingKeyboardView.KeyAction.Navigation.UP ->
+                        TerminalSession.SpecialKey.ARROW_UP
+                    FloatingKeyboardView.KeyAction.Navigation.DOWN ->
+                        TerminalSession.SpecialKey.ARROW_DOWN
+                    FloatingKeyboardView.KeyAction.Navigation.DELETE ->
+                        TerminalSession.SpecialKey.DELETE
+                }
+                terminalSession?.sendSpecialKey(specialKey)
+                resetModifiers()
+            }
         }
     }
 
-    private fun appendToInput(text: String) {
-        binding.terminalInput.append(text)
+    private fun resetModifiers() {
+        if (ctrlActive) {
+            ctrlActive = false
+            floatingKeyboard?.updateModifierState(
+                FloatingKeyboardView.KeyAction.Modifier.CTRL, false
+            )
+        }
+        if (altActive) {
+            altActive = false
+            floatingKeyboard?.updateModifierState(
+                FloatingKeyboardView.KeyAction.Modifier.ALT, false
+            )
+        }
     }
 
     private fun connectAndStartSession(connectionId: Long) {
@@ -147,7 +284,7 @@ class TerminalActivity : AppCompatActivity() {
                 }
 
                 appendOutput("Connected to ${connection.host}\n")
-                binding.toolbar.subtitle = connection.displayAddress
+                binding.toolbarSubtitle.text = connection.displayAddress
 
                 val commandRunner = RemoteCommandRunner(manager)
                 val session = TerminalSession(commandRunner, lifecycleScope)
@@ -162,7 +299,8 @@ class TerminalActivity : AppCompatActivity() {
                 session.onDisconnected = {
                     runOnUiThread {
                         appendOutput("\nDisconnected.\n")
-                        Toast.makeText(this@TerminalActivity, "Disconnected", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@TerminalActivity, "Disconnected", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
 
@@ -170,7 +308,11 @@ class TerminalActivity : AppCompatActivity() {
 
             } catch (e: Exception) {
                 appendOutput("\nConnection failed: ${e.message}\n")
-                Toast.makeText(this@TerminalActivity, "Connection failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@TerminalActivity,
+                    "Connection failed: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -183,7 +325,7 @@ class TerminalActivity : AppCompatActivity() {
         }
         binding.terminalOutput.text = outputBuffer.toString()
         binding.terminalScrollView.post {
-            binding.terminalScrollView.fullScroll(android.view.View.FOCUS_DOWN)
+            binding.terminalScrollView.fullScroll(View.FOCUS_DOWN)
         }
     }
 
