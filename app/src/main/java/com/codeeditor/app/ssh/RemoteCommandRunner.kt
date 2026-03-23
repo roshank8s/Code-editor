@@ -40,6 +40,7 @@ class RemoteCommandRunner(private val sshManager: SSHManager) {
                     val shell = session.startShell()
                     return InteractiveSession(
                         session = session,
+                        shell = shell,
                         inputStream = shell.inputStream,
                         errorStream = shell.errorStream,
                         outputStream = shell.outputStream
@@ -60,6 +61,7 @@ class RemoteCommandRunner(private val sshManager: SSHManager) {
 
     class InteractiveSession(
         private val session: Session,
+        private val shell: Session.Shell,
         val inputStream: InputStream,
         val errorStream: InputStream,
         val outputStream: OutputStream
@@ -76,7 +78,7 @@ class RemoteCommandRunner(private val sshManager: SSHManager) {
 
         fun resizePTY(cols: Int, rows: Int) {
             try {
-                session.reqWindowChange(cols, rows, 0, 0)
+                shell.changeWindowDimensions(cols, rows, 0, 0)
             } catch (_: Exception) {}
         }
 
