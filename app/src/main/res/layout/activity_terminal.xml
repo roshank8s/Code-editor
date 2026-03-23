@@ -90,18 +90,16 @@
 
         </ScrollView>
 
-        <!-- Minimal input capture for system keyboard -->
+        <!-- Invisible input capture for system keyboard (not visible to user) -->
         <EditText
             android:id="@+id/terminalInput"
             android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:background="#FF1A1A1A"
+            android:layout_height="1dp"
+            android:background="@android:color/transparent"
             android:fontFamily="monospace"
-            android:textSize="13sp"
-            android:textColor="@color/terminal_fg"
-            android:hint="Tap to type..."
-            app:hintTextColor="#444444"
-            android:paddingHorizontal="8dp"
+            android:textSize="1sp"
+            android:textColor="@android:color/transparent"
+            android:cursorVisible="false"
             android:inputType="textNoSuggestions|textVisiblePassword"
             android:imeOptions="flagNoExtractUi|flagNoFullscreen"
             android:singleLine="true" />
