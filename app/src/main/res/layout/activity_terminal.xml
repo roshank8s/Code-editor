@@ -54,28 +54,16 @@
 
     </LinearLayout>
 
-    <!-- Terminal output -->
-    <ScrollView
-        android:id="@+id/terminalScrollView"
+    <!-- Native terminal view (Canvas-based, like JuiceSSH) -->
+    <com.codeeditor.app.terminal.TerminalView
+        android:id="@+id/terminalView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
 
-        <TextView
-            android:id="@+id/terminalOutput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="13sp"
-            android:textColor="@color/terminal_fg"
-            android:padding="8dp"
-            android:gravity="bottom"
-            android:textIsSelectable="true" />
-
-    </ScrollView>
-
-    <!-- Shortcut keys bar (sits above system keyboard like Termux) -->
+    <!-- Shortcut keys bar (sits above system keyboard) -->
     <HorizontalScrollView
         android:id="@+id/shortcutBar"
         android:layout_width="match_parent"

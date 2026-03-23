@@ -3,9 +3,8 @@ package com.codeeditor.app.ssh
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.schmizz.sshj.connection.channel.direct.Session
-import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStreamReader
+import java.io.InputStream
 import java.io.OutputStream
 
 class RemoteCommandRunner(private val sshManager: SSHManager) {
@@ -41,8 +40,8 @@ class RemoteCommandRunner(private val sshManager: SSHManager) {
                     val shell = session.startShell()
                     return InteractiveSession(
                         session = session,
-                        inputStream = BufferedReader(InputStreamReader(shell.inputStream)),
-                        errorStream = BufferedReader(InputStreamReader(shell.errorStream)),
+                        inputStream = shell.inputStream,
+                        errorStream = shell.errorStream,
                         outputStream = shell.outputStream
                     )
                 } catch (e: Exception) {
@@ -61,26 +60,28 @@ class RemoteCommandRunner(private val sshManager: SSHManager) {
 
     class InteractiveSession(
         private val session: Session,
-        val inputStream: BufferedReader,
-        val errorStream: BufferedReader,
+        val inputStream: InputStream,
+        val errorStream: InputStream,
         val outputStream: OutputStream
     ) : AutoCloseable {
 
-        fun sendCommand(command: String) {
-            outputStream.write("$command\n".toByteArray())
+        fun write(data: ByteArray) {
+            outputStream.write(data)
             outputStream.flush()
         }
 
-        fun sendSpecialKey(key: String) {
-            outputStream.write(key.toByteArray())
-            outputStream.flush()
+        fun write(text: String) {
+            write(text.toByteArray())
+        }
+
+        fun resizePTY(cols: Int, rows: Int) {
+            try {
+                session.changeWindowDimensions(cols, rows, 0, 0)
+            } catch (_: Exception) {}
         }
 
         override fun close() {
-            try {
-                session.close()
-            } catch (_: Exception) {
-            }
+            try { session.close() } catch (_: Exception) {}
         }
     }
 }
