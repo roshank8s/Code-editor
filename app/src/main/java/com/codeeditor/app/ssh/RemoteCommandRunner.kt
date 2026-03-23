@@ -76,7 +76,7 @@ class RemoteCommandRunner(private val sshManager: SSHManager) {
 
         fun resizePTY(cols: Int, rows: Int) {
             try {
-                session.changeWindowDimensions(cols, rows, 0, 0)
+                session.reqWindowChange(cols, rows, 0, 0)
             } catch (_: Exception) {}
         }
 
