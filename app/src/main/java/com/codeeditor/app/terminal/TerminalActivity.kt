@@ -8,6 +8,7 @@ import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -101,6 +102,13 @@ class TerminalActivity : AppCompatActivity() {
                 ignoreChange = false
             }
         })
+
+        binding.terminalInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ENTER)
+                true
+            } else false
+        }
 
         binding.terminalInput.setOnKeyListener { _, keyCode, event ->
             if (event.action == KeyEvent.ACTION_DOWN) {
