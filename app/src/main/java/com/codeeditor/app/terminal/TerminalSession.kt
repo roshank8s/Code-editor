@@ -60,7 +60,8 @@ class TerminalSession(
                 }
             }
         } catch (e: Exception) {
-            onError?.invoke("Failed to start session: ${e.message}")
+            val detail = e.message ?: e.javaClass.simpleName
+            onError?.invoke("Failed to start session: $detail")
         }
     }
 

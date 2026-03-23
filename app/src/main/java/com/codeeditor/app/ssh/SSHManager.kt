@@ -75,6 +75,10 @@ class SSHManager : Closeable {
     suspend fun executeCommand(command: String, timeoutSeconds: Long = 30): CommandResult =
         withContext(Dispatchers.IO) {
             val ssh = client ?: throw IOException("Not connected")
+            if (!ssh.isConnected) {
+                _isConnected = false
+                throw IOException("SSH connection lost")
+            }
             var session: Session? = null
             try {
                 session = ssh.startSession()

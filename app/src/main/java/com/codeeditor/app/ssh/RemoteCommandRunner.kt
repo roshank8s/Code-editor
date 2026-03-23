@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.schmizz.sshj.connection.channel.direct.Session
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStream
 
@@ -27,15 +28,35 @@ class RemoteCommandRunner(private val sshManager: SSHManager) {
     }
 
     fun openInteractiveSession(): InteractiveSession {
-        val session = sshManager.openSession()
-        session.allocateDefaultPTY()
-        val shell = session.startShell()
-        return InteractiveSession(
-            session = session,
-            inputStream = BufferedReader(InputStreamReader(shell.inputStream)),
-            errorStream = BufferedReader(InputStreamReader(shell.errorStream)),
-            outputStream = shell.outputStream
-        )
+        if (!sshManager.isConnected) {
+            throw IOException("SSH connection is not active")
+        }
+
+        var lastException: Exception? = null
+        repeat(3) { attempt ->
+            try {
+                val session = sshManager.openSession()
+                try {
+                    session.allocateDefaultPTY()
+                    val shell = session.startShell()
+                    return InteractiveSession(
+                        session = session,
+                        inputStream = BufferedReader(InputStreamReader(shell.inputStream)),
+                        errorStream = BufferedReader(InputStreamReader(shell.errorStream)),
+                        outputStream = shell.outputStream
+                    )
+                } catch (e: Exception) {
+                    session.close()
+                    throw e
+                }
+            } catch (e: Exception) {
+                lastException = e
+                if (attempt < 2) {
+                    Thread.sleep((attempt + 1) * 1000L)
+                }
+            }
+        }
+        throw lastException ?: IOException("Failed to open interactive session")
     }
 
     class InteractiveSession(

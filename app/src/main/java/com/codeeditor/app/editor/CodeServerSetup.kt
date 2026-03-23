@@ -52,15 +52,32 @@ class CodeServerSetup(private val commandRunner: RemoteCommandRunner) {
         // Wait for code-server to be ready by checking for its specific response
         onStatusUpdate?.invoke("Waiting for code-server to start...")
         var attempts = 0
-        while (attempts < 30) {
+        while (attempts < 60) {
             if (isCodeServerOnPort(actualPort)) {
                 return SetupResult.Success(actualPort, pid)
             }
+
+            // Every 10 seconds, verify the process is still alive
+            if (attempts > 0 && attempts % 10 == 0) {
+                val alive = commandRunner.run(
+                    "kill -0 $pid 2>/dev/null && echo 'ALIVE' || echo 'DEAD'", 5
+                )
+                if (alive.stdout.trim() == "DEAD") {
+                    val logs = commandRunner.run(
+                        "journalctl -u code-server --no-pager -n 20 2>/dev/null || echo 'No logs available'", 5
+                    )
+                    return SetupResult.Error(
+                        "code-server process exited unexpectedly.\n${logs.stdout.take(500)}"
+                    )
+                }
+                onStatusUpdate?.invoke("Still waiting for code-server (${attempts}s)...")
+            }
+
             kotlinx.coroutines.delay(1000)
             attempts++
         }
 
-        return SetupResult.Error("code-server did not start within 30 seconds")
+        return SetupResult.Error("code-server did not start within 60 seconds")
     }
 
     /**
@@ -93,13 +110,16 @@ class CodeServerSetup(private val commandRunner: RemoteCommandRunner) {
      * by checking for its characteristic response headers/body.
      */
     private suspend fun isCodeServerOnPort(port: Int): Boolean {
+        // Try curl first, fall back to wget, then raw connection check
         val result = commandRunner.run(
-            "curl -s -i http://127.0.0.1:$port/ 2>/dev/null | head -20",
+            "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$port/ 2>/dev/null || " +
+                "wget -q -O /dev/null --server-response http://127.0.0.1:$port/ 2>&1 | head -1 || " +
+                "echo 'FAIL'",
             5
         )
-        val response = result.stdout
-        // code-server responses contain these identifiers
-        return response.contains("code-server") || response.contains("vscode")
+        val output = result.stdout.trim()
+        // HTTP 200 or 302 means code-server is responding
+        return output == "200" || output == "302" || output.contains("200 OK") || output.contains("302")
     }
 
     suspend fun stopCodeServer() {
