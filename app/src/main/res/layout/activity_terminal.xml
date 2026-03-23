@@ -100,7 +100,7 @@
             android:textSize="13sp"
             android:textColor="@color/terminal_fg"
             android:hint="Tap to type..."
-            android:hintTextColor="#444444"
+            app:hintTextColor="#444444"
             android:paddingHorizontal="8dp"
             android:inputType="textNoSuggestions|textVisiblePassword"
             android:imeOptions="flagNoExtractUi|flagNoFullscreen"
