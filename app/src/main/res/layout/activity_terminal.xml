@@ -1,116 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/terminal_bg">
 
-    <!-- Main content -->
+    <!-- Toolbar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface_dark"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="4dp">
 
-        <!-- Toolbar -->
+        <ImageButton
+            android:id="@+id/btnClose"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="Close"
+            android:scaleType="centerInside" />
+
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/surface_dark"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="4dp">
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingHorizontal="8dp">
 
-            <ImageButton
-                android:id="@+id/btnClose"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:contentDescription="Close"
-                android:scaleType="centerInside" />
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/toolbarTitle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:paddingHorizontal="8dp">
+                android:text="@string/terminal"
+                android:textColor="@color/terminal_fg"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/toolbarTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/terminal"
-                    android:textColor="@color/terminal_fg"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/toolbarSubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#999999"
-                    android:textSize="12sp"
-                    android:singleLine="true"
-                    android:ellipsize="end" />
-
-            </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/btnToggleKeyboard"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_keyboard_24"
-                android:contentDescription="@string/toggle_keyboard"
-                android:scaleType="centerInside" />
+            <TextView
+                android:id="@+id/toolbarSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#999999"
+                android:textSize="12sp"
+                android:singleLine="true"
+                android:ellipsize="end" />
 
         </LinearLayout>
 
-        <!-- Terminal output -->
-        <ScrollView
-            android:id="@+id/terminalScrollView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:fillViewport="true">
-
-            <TextView
-                android:id="@+id/terminalOutput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:textSize="13sp"
-                android:textColor="@color/terminal_fg"
-                android:padding="8dp"
-                android:gravity="bottom"
-                android:textIsSelectable="true" />
-
-        </ScrollView>
-
-        <!-- Invisible input capture for system keyboard (not visible to user) -->
-        <EditText
-            android:id="@+id/terminalInput"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@android:color/transparent"
-            android:fontFamily="monospace"
-            android:textSize="1sp"
-            android:textColor="@android:color/transparent"
-            android:cursorVisible="false"
-            android:inputType="textNoSuggestions|textVisiblePassword"
-            android:imeOptions="flagNoExtractUi|flagNoFullscreen"
-            android:singleLine="true" />
-
     </LinearLayout>
 
-    <!-- Floating keyboard container -->
-    <FrameLayout
-        android:id="@+id/floatingKeyboardContainer"
+    <!-- Terminal output -->
+    <ScrollView
+        android:id="@+id/terminalScrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:elevation="12dp" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
-</FrameLayout>
+        <TextView
+            android:id="@+id/terminalOutput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textColor="@color/terminal_fg"
+            android:padding="8dp"
+            android:gravity="bottom"
+            android:textIsSelectable="true" />
+
+    </ScrollView>
+
+    <!-- Shortcut keys bar (sits above system keyboard like Termux) -->
+    <HorizontalScrollView
+        android:id="@+id/shortcutBar"
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:background="#FF1A1A1A"
+        android:scrollbars="none"
+        android:fadingEdge="horizontal"
+        android:fadingEdgeLength="16dp"
+        android:requiresFadingEdge="horizontal">
+
+        <LinearLayout
+            android:id="@+id/shortcutKeysContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="4dp" />
+
+    </HorizontalScrollView>
+
+    <!-- Invisible input capture for system keyboard -->
+    <EditText
+        android:id="@+id/terminalInput"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/transparent"
+        android:fontFamily="monospace"
+        android:textSize="1sp"
+        android:textColor="@android:color/transparent"
+        android:cursorVisible="false"
+        android:inputType="textNoSuggestions|textVisiblePassword"
+        android:imeOptions="flagNoExtractUi|flagNoFullscreen"
+        android:singleLine="true" />
+
+</LinearLayout>

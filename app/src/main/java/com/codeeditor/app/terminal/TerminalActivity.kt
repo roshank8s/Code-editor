@@ -1,21 +1,25 @@
 package com.codeeditor.app.terminal
 
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.method.ScrollingMovementMethod
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.codeeditor.app.R
 import com.codeeditor.app.connections.ConnectionDatabase
 import com.codeeditor.app.connections.ConnectionEntity
 import com.codeeditor.app.databinding.ActivityTerminalBinding
-import com.codeeditor.app.editor.FloatingKeyboardView
 import com.codeeditor.app.ssh.RemoteCommandRunner
 import com.codeeditor.app.ssh.SSHKeyManager
 import com.codeeditor.app.ssh.SSHManager
@@ -30,10 +34,13 @@ class TerminalActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTerminalBinding
     private var sshManager: SSHManager? = null
     private var terminalSession: TerminalSession? = null
-    private var floatingKeyboard: FloatingKeyboardView? = null
     private var ctrlActive = false
     private var altActive = false
     private val outputBuffer = StringBuilder()
+
+    // Shortcut key views for modifier state highlighting
+    private var ctrlKeyView: TextView? = null
+    private var altKeyView: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +54,7 @@ class TerminalActivity : AppCompatActivity() {
         }
 
         setupUI()
-        setupFloatingKeyboard()
+        setupShortcutBar()
         connectAndStartSession(connectionId)
     }
 
@@ -67,16 +74,118 @@ class TerminalActivity : AppCompatActivity() {
         // Auto-focus the hidden input so system keyboard works immediately
         binding.terminalInput.requestFocus()
 
-        // Toggle floating keyboard
-        binding.btnToggleKeyboard.setOnClickListener {
-            floatingKeyboard?.let {
-                if (it.isKeyboardVisible) it.hide() else it.show()
-            }
-        }
-
         // Direct input: each character typed is sent immediately to the terminal
         setupDirectInput()
     }
+
+    // =========================================================================
+    // Shortcut Bar (above system keyboard, like Termux)
+    // =========================================================================
+
+    private fun setupShortcutBar() {
+        val container = binding.shortcutKeysContainer
+        val dp = resources.displayMetrics.density
+
+        // Define shortcut keys: label -> action
+        data class ShortcutKey(
+            val label: String,
+            val isModifier: Boolean = false,
+            val action: () -> Unit
+        )
+
+        val keys = listOf(
+            ShortcutKey("ESC") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ESC) } },
+            ShortcutKey("TAB") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.TAB) } },
+            ShortcutKey("CTRL", isModifier = true) {
+                ctrlActive = !ctrlActive
+                ctrlKeyView?.alpha = if (ctrlActive) 1.0f else 0.6f
+            },
+            ShortcutKey("ALT", isModifier = true) {
+                altActive = !altActive
+                altKeyView?.alpha = if (altActive) 1.0f else 0.6f
+            },
+            ShortcutKey("|") { sendChar("|") },
+            ShortcutKey("/") { sendChar("/") },
+            ShortcutKey("-") { sendChar("-") },
+            ShortcutKey("~") { sendChar("~") },
+            ShortcutKey("_") { sendChar("_") },
+            ShortcutKey(":") { sendChar(":") },
+            ShortcutKey(";") { sendChar(";") },
+            ShortcutKey("{") { sendChar("{") },
+            ShortcutKey("}") { sendChar("}") },
+            ShortcutKey("[") { sendChar("[") },
+            ShortcutKey("]") { sendChar("]") },
+            ShortcutKey("'") { sendChar("'") },
+            ShortcutKey("\"") { sendChar("\"") },
+            ShortcutKey("\\") { sendChar("\\") },
+            ShortcutKey("&") { sendChar("&") },
+            ShortcutKey("<") { sendChar("<") },
+            ShortcutKey(">") { sendChar(">") },
+            ShortcutKey("$") { sendChar("$") },
+            ShortcutKey("#") { sendChar("#") },
+            ShortcutKey("=") { sendChar("=") },
+            ShortcutKey("*") { sendChar("*") },
+            ShortcutKey("`") { sendChar("`") },
+            ShortcutKey("\u2191") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ARROW_UP) } },
+            ShortcutKey("\u2193") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ARROW_DOWN) } },
+            ShortcutKey("\u2190") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ARROW_LEFT) } },
+            ShortcutKey("\u2192") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ARROW_RIGHT) } },
+            ShortcutKey("HOME") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.HOME) } },
+            ShortcutKey("END") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.END) } },
+            ShortcutKey("PGUP") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.PAGE_UP) } },
+            ShortcutKey("PGDN") { sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.PAGE_DOWN) } },
+        )
+
+        for (key in keys) {
+            val btn = TextView(this).apply {
+                text = key.label
+                setTextColor(Color.WHITE)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setBackgroundResource(R.drawable.bg_key)
+                isClickable = true
+                isFocusable = false
+                isFocusableInTouchMode = false
+                minWidth = (if (key.label.length > 2) 42 else 32).let { (it * dp).toInt() }
+                val margin = (2 * dp).toInt()
+                val height = (30 * dp).toInt()
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    height
+                ).apply {
+                    setMargins(margin, margin, margin, margin)
+                }
+                setPadding((6 * dp).toInt(), 0, (6 * dp).toInt(), 0)
+                if (key.isModifier) alpha = 0.6f
+                setOnClickListener { key.action() }
+            }
+
+            // Track modifier views for state highlighting
+            if (key.label == "CTRL") ctrlKeyView = btn
+            if (key.label == "ALT") altKeyView = btn
+
+            container.addView(btn)
+        }
+    }
+
+    private fun sendChar(c: String) {
+        if (ctrlActive && c.length == 1) {
+            sendToTerminal { terminalSession?.sendCtrlKey(c[0]) }
+            ctrlActive = false
+            ctrlKeyView?.alpha = 0.6f
+        } else {
+            sendToTerminal { terminalSession?.sendText(c) }
+        }
+        if (altActive) {
+            altActive = false
+            altKeyView?.alpha = 0.6f
+        }
+    }
+
+    // =========================================================================
+    // Direct keyboard input
+    // =========================================================================
 
     private fun setupDirectInput() {
         var ignoreChange = false
@@ -90,9 +199,7 @@ class TerminalActivity : AppCompatActivity() {
                     if (ctrlActive && newText.length == 1) {
                         sendToTerminal { terminalSession?.sendCtrlKey(newText[0]) }
                         ctrlActive = false
-                        floatingKeyboard?.updateModifierState(
-                            FloatingKeyboardView.KeyAction.Modifier.CTRL, false
-                        )
+                        runOnUiThread { ctrlKeyView?.alpha = 0.6f }
                     } else {
                         sendToTerminal { terminalSession?.sendText(newText) }
                     }
@@ -145,127 +252,14 @@ class TerminalActivity : AppCompatActivity() {
         }
     }
 
-    /** Send terminal commands on IO thread to avoid crashes from writing on main thread */
+    /** Send terminal commands on IO thread to avoid crashes */
     private fun sendToTerminal(block: () -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) { block() }
     }
 
-    private fun setupFloatingKeyboard() {
-        val container = binding.floatingKeyboardContainer
-        val keyboard = FloatingKeyboardView(this, container).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
-        floatingKeyboard = keyboard
-        container.addView(keyboard)
-
-        keyboard.onKeyPressed = { action -> handleKeyAction(action) }
-
-        // Show keyboard by default
-        keyboard.show()
-    }
-
-    private fun handleKeyAction(action: FloatingKeyboardView.KeyAction) {
-        when (action) {
-            is FloatingKeyboardView.KeyAction.ModifierToggle -> {
-                when (action.modifier) {
-                    FloatingKeyboardView.KeyAction.Modifier.CTRL -> {
-                        ctrlActive = !ctrlActive
-                        floatingKeyboard?.updateModifierState(action.modifier, ctrlActive)
-                    }
-                    FloatingKeyboardView.KeyAction.Modifier.ALT -> {
-                        altActive = !altActive
-                        floatingKeyboard?.updateModifierState(action.modifier, altActive)
-                    }
-                    FloatingKeyboardView.KeyAction.Modifier.SHIFT -> {
-                        // Shift is handled internally by the keyboard for letter case
-                    }
-                }
-            }
-            is FloatingKeyboardView.KeyAction.SpecialKey -> {
-                when (action.key) {
-                    FloatingKeyboardView.KeyAction.Special.ESC ->
-                        sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ESC) }
-                    FloatingKeyboardView.KeyAction.Special.TAB ->
-                        sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.TAB) }
-                }
-                resetModifiers()
-            }
-            is FloatingKeyboardView.KeyAction.Character -> {
-                val char = action.char
-                if (ctrlActive && char.length == 1) {
-                    sendToTerminal { terminalSession?.sendCtrlKey(char[0]) }
-                } else {
-                    sendToTerminal { terminalSession?.sendText(char) }
-                }
-                resetModifiers()
-            }
-            is FloatingKeyboardView.KeyAction.Backspace -> {
-                sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.BACKSPACE) }
-                resetModifiers()
-            }
-            is FloatingKeyboardView.KeyAction.Enter -> {
-                sendToTerminal { terminalSession?.sendSpecialKey(TerminalSession.SpecialKey.ENTER) }
-                resetModifiers()
-            }
-            is FloatingKeyboardView.KeyAction.ShortcutKey -> {
-                when (action.shortcut) {
-                    FloatingKeyboardView.KeyAction.Shortcut.SAVE ->
-                        sendToTerminal { terminalSession?.sendCtrlKey('S') }
-                    FloatingKeyboardView.KeyAction.Shortcut.UNDO ->
-                        sendToTerminal { terminalSession?.sendCtrlKey('Z') }
-                    FloatingKeyboardView.KeyAction.Shortcut.REDO ->
-                        sendToTerminal { terminalSession?.sendCtrlKey('Y') }
-                    FloatingKeyboardView.KeyAction.Shortcut.COMMAND_PALETTE -> {}
-                    FloatingKeyboardView.KeyAction.Shortcut.FIND ->
-                        sendToTerminal { terminalSession?.sendCtrlKey('F') }
-                    FloatingKeyboardView.KeyAction.Shortcut.CLOSE_TAB ->
-                        sendToTerminal { terminalSession?.sendCtrlKey('C') }
-                }
-            }
-            is FloatingKeyboardView.KeyAction.NavigationKey -> {
-                val specialKey = when (action.nav) {
-                    FloatingKeyboardView.KeyAction.Navigation.HOME ->
-                        TerminalSession.SpecialKey.HOME
-                    FloatingKeyboardView.KeyAction.Navigation.END ->
-                        TerminalSession.SpecialKey.END
-                    FloatingKeyboardView.KeyAction.Navigation.PAGE_UP ->
-                        TerminalSession.SpecialKey.PAGE_UP
-                    FloatingKeyboardView.KeyAction.Navigation.PAGE_DOWN ->
-                        TerminalSession.SpecialKey.PAGE_DOWN
-                    FloatingKeyboardView.KeyAction.Navigation.LEFT ->
-                        TerminalSession.SpecialKey.ARROW_LEFT
-                    FloatingKeyboardView.KeyAction.Navigation.RIGHT ->
-                        TerminalSession.SpecialKey.ARROW_RIGHT
-                    FloatingKeyboardView.KeyAction.Navigation.UP ->
-                        TerminalSession.SpecialKey.ARROW_UP
-                    FloatingKeyboardView.KeyAction.Navigation.DOWN ->
-                        TerminalSession.SpecialKey.ARROW_DOWN
-                    FloatingKeyboardView.KeyAction.Navigation.DELETE ->
-                        TerminalSession.SpecialKey.DELETE
-                }
-                sendToTerminal { terminalSession?.sendSpecialKey(specialKey) }
-                resetModifiers()
-            }
-        }
-    }
-
-    private fun resetModifiers() {
-        if (ctrlActive) {
-            ctrlActive = false
-            floatingKeyboard?.updateModifierState(
-                FloatingKeyboardView.KeyAction.Modifier.CTRL, false
-            )
-        }
-        if (altActive) {
-            altActive = false
-            floatingKeyboard?.updateModifierState(
-                FloatingKeyboardView.KeyAction.Modifier.ALT, false
-            )
-        }
-    }
+    // =========================================================================
+    // SSH Connection
+    // =========================================================================
 
     private fun connectAndStartSession(connectionId: Long) {
         lifecycleScope.launch {
