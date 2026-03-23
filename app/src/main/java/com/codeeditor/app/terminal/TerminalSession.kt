@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.Closeable
 
 class TerminalSession(
@@ -22,46 +23,49 @@ class TerminalSession(
     var onDisconnected: (() -> Unit)? = null
 
     fun start() {
-        try {
-            interactiveSession = commandRunner.openInteractiveSession()
+        scope.launch {
+            try {
+                val session = withContext(Dispatchers.IO) {
+                    commandRunner.openInteractiveSession()
+                }
+                interactiveSession = session
 
-            // Read stdout
-            readJob = scope.launch(Dispatchers.IO) {
-                try {
-                    val session = interactiveSession ?: return@launch
-                    val buffer = CharArray(4096)
-                    while (isActive) {
-                        val count = session.inputStream.read(buffer)
-                        if (count == -1) break
-                        val text = String(buffer, 0, count)
-                        onOutput?.invoke(text)
-                    }
-                } catch (e: Exception) {
-                    if (isActive) {
-                        onError?.invoke("Connection lost: ${e.message}")
-                        onDisconnected?.invoke()
+                // Read stdout
+                readJob = launch(Dispatchers.IO) {
+                    try {
+                        val buffer = CharArray(4096)
+                        while (isActive) {
+                            val count = session.inputStream.read(buffer)
+                            if (count == -1) break
+                            val text = String(buffer, 0, count)
+                            onOutput?.invoke(text)
+                        }
+                    } catch (e: Exception) {
+                        if (isActive) {
+                            onError?.invoke("Connection lost: ${e.message}")
+                            onDisconnected?.invoke()
+                        }
                     }
                 }
-            }
 
-            // Read stderr
-            errorReadJob = scope.launch(Dispatchers.IO) {
-                try {
-                    val session = interactiveSession ?: return@launch
-                    val buffer = CharArray(4096)
-                    while (isActive) {
-                        val count = session.errorStream.read(buffer)
-                        if (count == -1) break
-                        val text = String(buffer, 0, count)
-                        onOutput?.invoke(text)
+                // Read stderr
+                errorReadJob = launch(Dispatchers.IO) {
+                    try {
+                        val buffer = CharArray(4096)
+                        while (isActive) {
+                            val count = session.errorStream.read(buffer)
+                            if (count == -1) break
+                            val text = String(buffer, 0, count)
+                            onOutput?.invoke(text)
+                        }
+                    } catch (_: Exception) {
+                        // Ignore stderr read errors
                     }
-                } catch (_: Exception) {
-                    // Ignore stderr read errors
                 }
+            } catch (e: Exception) {
+                val detail = e.message ?: e.javaClass.simpleName
+                onError?.invoke("Failed to start session: $detail")
             }
-        } catch (e: Exception) {
-            val detail = e.message ?: e.javaClass.simpleName
-            onError?.invoke("Failed to start session: $detail")
         }
     }
 

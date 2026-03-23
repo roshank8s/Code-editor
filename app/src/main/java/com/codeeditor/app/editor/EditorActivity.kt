@@ -62,7 +62,7 @@ class EditorActivity : AppCompatActivity() {
     private var fabExpanded = false
     private val fabHandler = Handler(Looper.getMainLooper())
     private val fabFadeRunnable = Runnable {
-        if (!fabExpanded) binding.fabMain.alpha = 0.4f
+        if (!fabExpanded) binding.fabMain.alpha = 0.7f
     }
 
     // Fullscreen state
@@ -158,6 +158,8 @@ class EditorActivity : AppCompatActivity() {
                 runOnUiThread {
                     binding.loadingOverlay.visibility = View.GONE
                     updateStatus("Connected", R.color.status_connected)
+                    // Briefly expand FAB menu to show available features
+                    showFabHint()
                 }
             },
             onError = { error ->
@@ -441,6 +443,17 @@ class EditorActivity : AppCompatActivity() {
         fabHandler.removeCallbacks(fabFadeRunnable)
         binding.fabMain.alpha = 1.0f
         fabHandler.postDelayed(fabFadeRunnable, 4000)
+    }
+
+    private fun showFabHint() {
+        val prefs = getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("fab_hint_shown", false)) {
+            prefs.edit().putBoolean("fab_hint_shown", true).apply()
+            // Briefly expand FAB to show available tools, then collapse
+            fabHandler.postDelayed({ expandFABMenu() }, 800)
+            fabHandler.postDelayed({ collapseFABMenu() }, 3000)
+            Toast.makeText(this, "Tap + for browser, snippets & more", Toast.LENGTH_LONG).show()
+        }
     }
 
     // =========================================================================
